@@ -21,6 +21,7 @@ from .base import MinimizationAttack, get_is_adversarial
 from .base import get_criterion
 from .base import T
 from .base import raise_if_kwargs
+from .base import verify_input_bounds
 from ..distances import l2, linf
 
 
@@ -100,6 +101,8 @@ class HopSkipJumpAttack(MinimizationAttack):
         raise_if_kwargs(kwargs)
         originals, restore_type = ep.astensor_(inputs)
         del inputs, kwargs
+
+        verify_input_bounds(originals, model)
 
         criterion = get_criterion(criterion)
         is_adversarial = get_is_adversarial(criterion, model)
@@ -259,8 +262,22 @@ class HopSkipJumpAttack(MinimizationAttack):
             multipliers_list.append(
                 ep.where(
                     decision,
-                    ep.ones(x_advs, (len(x_advs,))),
-                    -ep.ones(x_advs, (len(decision,))),
+                    ep.ones(
+                        x_advs,
+                        (
+                            len(
+                                x_advs,
+                            )
+                        ),
+                    ),
+                    -ep.ones(
+                        x_advs,
+                        (
+                            len(
+                                decision,
+                            )
+                        ),
+                    ),
                 )
             )
         # (steps, bs, ...)
@@ -311,7 +328,7 @@ class HopSkipJumpAttack(MinimizationAttack):
         perturbed: ep.Tensor,
     ) -> ep.Tensor:
         # Choose upper thresholds in binary search based on constraint.
-        d = np.prod(perturbed.shape[1:])
+        d = int(np.prod(perturbed.shape[1:]))
         if self.constraint == "linf":
             highs = linf(originals, perturbed)
 
@@ -320,7 +337,7 @@ class HopSkipJumpAttack(MinimizationAttack):
             thresholds = highs * self.gamma / (d * d)
         else:
             highs = ep.ones(perturbed, len(perturbed))
-            thresholds = self.gamma / (d * math.sqrt(d))
+            thresholds = highs * self.gamma / (d * math.sqrt(d))
 
         lows = ep.zeros_like(highs)
 
@@ -354,7 +371,7 @@ class HopSkipJumpAttack(MinimizationAttack):
         if step == 0:
             result = 0.1 * ep.ones_like(distances)
         else:
-            d = np.prod(originals.shape[1:])
+            d = int(np.prod(originals.shape[1:]))
 
             if self.constraint == "linf":
                 theta = self.gamma / (d * d)

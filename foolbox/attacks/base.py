@@ -130,9 +130,7 @@ class Repeated(AttackWithDistance):
         x, restore_type = ep.astensor_(inputs)
         del inputs
 
-        # verify that input to the attack lies within model's input bounds
-        assert x.min() >= model.bounds.lower
-        assert x.max() >= model.bounds.upper
+        verify_input_bounds(x, model)
 
         criterion = get_criterion(criterion)
 
@@ -243,7 +241,7 @@ class FixedEpsilonAttack(AttackWithDistance):
         ...
 
     @final  # noqa: F811
-    def __call__(  # type: ignore
+    def __call__(
         self,
         model: Model,
         inputs: T,
@@ -255,6 +253,8 @@ class FixedEpsilonAttack(AttackWithDistance):
 
         x, restore_type = ep.astensor_(inputs)
         del inputs
+
+        verify_input_bounds(x, model)
 
         criterion = get_criterion(criterion)
         is_adversarial = get_is_adversarial(criterion, model)
@@ -381,7 +381,7 @@ class MinimizationAttack(AttackWithDistance):
         ...
 
     @final  # noqa: F811
-    def __call__(  # type: ignore
+    def __call__(
         self,
         model: Model,
         inputs: T,
@@ -392,6 +392,8 @@ class MinimizationAttack(AttackWithDistance):
     ) -> Union[Tuple[List[T], List[T], T], Tuple[T, T, T]]:
         x, restore_type = ep.astensor_(inputs)
         del inputs
+
+        verify_input_bounds(x, model)
 
         criterion = get_criterion(criterion)
         is_adversarial = get_is_adversarial(criterion, model)
@@ -489,3 +491,9 @@ def raise_if_kwargs(kwargs: Dict[str, Any]) -> None:
         raise TypeError(
             f"attack got an unexpected keyword argument '{next(iter(kwargs.keys()))}'"
         )
+
+
+def verify_input_bounds(input: ep.Tensor, model: Model) -> None:
+    # verify that input to the attack lies within model's input bounds
+    assert input.min().item() >= model.bounds.lower
+    assert input.max().item() <= model.bounds.upper

@@ -22,7 +22,9 @@ def rotate_and_shift(
 
 
 def transform_pt(
-    x_e: Tensor, translation: Tuple[float, float] = (0.0, 0.0), rotation: float = 0.0,
+    x_e: Tensor,
+    translation: Tuple[float, float] = (0.0, 0.0),
+    rotation: float = 0.0,
 ) -> Any:
     import torch
 
@@ -40,12 +42,17 @@ def transform_pt(
 
     # to pt
     x = x_e.raw
-    theta = torch.tensor(theta, device=x.device)
+    theta_t = torch.tensor(theta, device=x.device)
 
     assert len(x.shape) == 4
-    assert theta.shape[1:] == (2, 3)
+    assert theta_t.shape[1:] == (2, 3)
 
-    bs, _, n_x, n_y, = x.shape
+    (
+        bs,
+        _,
+        n_x,
+        n_y,
+    ) = x.shape
 
     def create_meshgrid(x: torch.Tensor) -> torch.Tensor:
         space_x = torch.linspace(-1, 1, n_x, device=x.device)
@@ -57,8 +64,8 @@ def transform_pt(
         return grid
 
     meshgrid = create_meshgrid(x)
-    theta = theta[:, None, None, :, :].repeat(1, n_x, n_y, 1, 1)
-    new_coords = torch.matmul(theta, meshgrid)
+    theta_t = theta_t[:, None, None, :, :].repeat(1, n_x, n_y, 1, 1)
+    new_coords = torch.matmul(theta_t, meshgrid)
     new_coords = new_coords.squeeze_(-1)
 
     # align_corners=True to match tf implementation
@@ -72,7 +79,9 @@ def transform_pt(
 # https://github.com/kevinzakka/spatial-transformer-network/blob/master/stn/transformer.py
 # state @375f990 on 3 Jun 2018
 def transform_tf(
-    x_e: Tensor, translation: Tuple[float, float] = (0.0, 0.0), rotation: float = 0.0,
+    x_e: Tensor,
+    translation: Tuple[float, float] = (0.0, 0.0),
+    rotation: float = 0.0,
 ) -> Any:
     """
     Input

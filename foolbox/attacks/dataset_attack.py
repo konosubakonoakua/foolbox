@@ -14,6 +14,7 @@ from .base import FlexibleDistanceMinimizationAttack
 from .base import T
 from .base import get_criterion
 from .base import raise_if_kwargs
+from .base import verify_input_bounds
 
 
 class DatasetAttack(FlexibleDistanceMinimizationAttack):
@@ -79,6 +80,8 @@ class DatasetAttack(FlexibleDistanceMinimizationAttack):
         x, restore_type = ep.astensor_(inputs)
         del inputs, kwargs
 
+        verify_input_bounds(x, model)
+
         criterion = get_criterion(criterion)
 
         result = x
@@ -91,7 +94,6 @@ class DatasetAttack(FlexibleDistanceMinimizationAttack):
         for i in range(batch_size):
             indices = list(range(batch_size))
             indices.remove(i)
-            indices = list(indices)
             np.random.shuffle(indices)
             index_pools.append(indices)
 
@@ -99,10 +101,10 @@ class DatasetAttack(FlexibleDistanceMinimizationAttack):
             if found.all():
                 break
 
-            indices = np.array([pool[i] for pool in index_pools])
+            indices_np = np.array([pool[i] for pool in index_pools])
 
-            xp = self.inputs[indices]
-            yp = self.outputs[indices]
+            xp = self.inputs[indices_np]
+            yp = self.outputs[indices_np]
             is_adv = criterion(xp, yp)
 
             new_found = ep.logical_and(is_adv, found.logical_not())

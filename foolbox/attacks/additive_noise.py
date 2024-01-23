@@ -6,7 +6,7 @@ import eagerpy as ep
 from ..devutils import flatten
 from ..devutils import atleast_kd
 
-from ..distances import l2, linf
+from ..distances import l2, linf, Distance
 
 from .base import FixedEpsilonAttack
 from .base import Criterion
@@ -17,6 +17,7 @@ from .base import get_is_adversarial
 from .base import raise_if_kwargs
 
 from ..external.clipping_aware_rescaling import l2_clipping_aware_rescaling
+from .base import verify_input_bounds
 
 
 class BaseAdditiveNoiseAttack(FixedEpsilonAttack, ABC):
@@ -32,6 +33,8 @@ class BaseAdditiveNoiseAttack(FixedEpsilonAttack, ABC):
         raise_if_kwargs(kwargs)
         x, restore_type = ep.astensor_(inputs)
         del inputs, criterion, kwargs
+
+        verify_input_bounds(x, model)
 
         min_, max_ = model.bounds
         p = self.sample_noise(x)
@@ -53,7 +56,9 @@ class BaseAdditiveNoiseAttack(FixedEpsilonAttack, ABC):
 
 
 class L2Mixin:
-    distance = l2
+    @property
+    def distance(self) -> Distance:
+        return l2
 
     def get_epsilons(
         self, x: ep.Tensor, p: ep.Tensor, epsilon: float, min_: float, max_: float
@@ -63,7 +68,9 @@ class L2Mixin:
 
 
 class L2ClippingAwareMixin:
-    distance = l2
+    @property
+    def distance(self) -> Distance:
+        return l2
 
     def get_epsilons(
         self, x: ep.Tensor, p: ep.Tensor, epsilon: float, min_: float, max_: float
@@ -74,7 +81,9 @@ class L2ClippingAwareMixin:
 
 
 class LinfMixin:
-    distance = linf
+    @property
+    def distance(self) -> Distance:
+        return linf
 
     def get_epsilons(
         self, x: ep.Tensor, p: ep.Tensor, epsilon: float, min_: float, max_: float
@@ -163,6 +172,8 @@ class BaseRepeatedAdditiveNoiseAttack(FixedEpsilonAttack, ABC):
         x0, restore_type = ep.astensor_(inputs)
         criterion_ = get_criterion(criterion)
         del inputs, criterion, kwargs
+
+        verify_input_bounds(x0, model)
 
         is_adversarial = get_is_adversarial(criterion_, model)
 

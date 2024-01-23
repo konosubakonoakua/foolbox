@@ -14,6 +14,7 @@ from .base import FixedEpsilonAttack
 from .base import T
 from .base import get_channel_axis
 from .base import raise_if_kwargs
+from .base import verify_input_bounds
 import math
 
 from .gen_attack_utils import rescale_images
@@ -76,8 +77,8 @@ class GenAttack(FixedEpsilonAttack):
     def choice(
         self, a: int, size: Union[int, ep.TensorType], replace: bool, p: ep.TensorType
     ) -> Any:
-        p = p.numpy()
-        x = np.random.choice(a, size, replace, p)
+        p_np: np.ndarray = p.numpy()
+        x = np.random.choice(a, size, replace, p_np)  # type: ignore
         return x
 
     def run(
@@ -92,6 +93,8 @@ class GenAttack(FixedEpsilonAttack):
         raise_if_kwargs(kwargs)
         x, restore_type = ep.astensor_(inputs)
         del inputs, kwargs
+
+        verify_input_bounds(x, model)
 
         N = len(x)
 

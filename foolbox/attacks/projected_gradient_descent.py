@@ -121,11 +121,15 @@ class L1AdamProjectedGradientDescentAttack(L1ProjectedGradientDescentAttack):
 
     def get_optimizer(self, x: ep.Tensor, stepsize: float) -> Optimizer:
         return AdamOptimizer(
-            x, stepsize, self.adam_beta1, self.adam_beta2, self.adam_epsilon,
+            x,
+            stepsize,
+            self.adam_beta1,
+            self.adam_beta2,
+            self.adam_epsilon,
         )
 
 
-class L2PAdamProjectedGradientDescentAttack(L2ProjectedGradientDescentAttack):
+class L2AdamProjectedGradientDescentAttack(L2ProjectedGradientDescentAttack):
     """L2 Projected Gradient Descent with Adam optimizer
 
     Args:
@@ -162,7 +166,11 @@ class L2PAdamProjectedGradientDescentAttack(L2ProjectedGradientDescentAttack):
 
     def get_optimizer(self, x: ep.Tensor, stepsize: float) -> Optimizer:
         return AdamOptimizer(
-            x, stepsize, self.adam_beta1, self.adam_beta2, self.adam_epsilon,
+            x,
+            stepsize,
+            self.adam_beta1,
+            self.adam_beta2,
+            self.adam_epsilon,
         )
 
 
@@ -203,5 +211,9 @@ class LinfAdamProjectedGradientDescentAttack(LinfProjectedGradientDescentAttack)
 
     def get_optimizer(self, x: ep.Tensor, stepsize: float) -> Optimizer:
         return AdamOptimizer(
-            x, stepsize, self.adam_beta1, self.adam_beta2, self.adam_epsilon,
+            x,
+            stepsize,
+            self.adam_beta1,
+            self.adam_beta2,
+            self.adam_epsilon,
         )
